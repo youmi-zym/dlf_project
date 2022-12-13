@@ -1,9 +1,11 @@
 import argparse
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import numpy as np
 from tf_model import Model
 import cv2
+import matplotlib.pyplot as plt
 
 
 #set para
@@ -47,7 +49,6 @@ def main():
 
     with tf.Session() as sess:
 
-
         img_L = cv2.cvtColor(cv2.imread(left_img), cv2.COLOR_BGR2RGB)
         img_L = cv2.resize(img_L, (weight, height))
         img_R = cv2.cvtColor(cv2.imread(right_img), cv2.COLOR_BGR2RGB)
@@ -64,11 +65,8 @@ def main():
 		
         pred = net.predict(img_L, img_R)
         pred = np.squeeze(pred,axis=0)
-        
-        pred_disp = pred.astype(np.uint8)
-        cv2.imwrite('pred_disp.png', pred_disp)
-        pred_rainbow = cv2.applyColorMap(pred_disp, cv2.COLORMAP_RAINBOW)
-        cv2.imwrite('pred_rainbow.png', pred_rainbow)
+
+        plt.imsave('pred_plt.png', pred)
 
 
 if __name__ == '__main__':
