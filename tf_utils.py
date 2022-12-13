@@ -1,7 +1,6 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
-import tensorflow.contrib as tfc
 
 
 def conv_block(func, bottom, filters, kernel_size, strides=1, dilation_rate=1, name=None, reuse=None, reg=1e-4,
@@ -9,9 +8,9 @@ def conv_block(func, bottom, filters, kernel_size, strides=1, dilation_rate=1, n
     with tf.variable_scope(name):
         conv_params = {
             'padding': 'same',
-            'kernel_initializer': tfc.layers.xavier_initializer(),
-            'kernel_regularizer': tfc.layers.l2_regularizer(reg),
-            'bias_regularizer': tfc.layers.l2_regularizer(reg),
+            # 'kernel_initializer': tfc.layers.xavier_initializer(),
+            # 'kernel_regularizer': tfc.layers.l2_regularizer(reg),
+            # 'bias_regularizer': tfc.layers.l2_regularizer(reg),
             'name': 'conv',
             'reuse': reuse
         }
@@ -37,9 +36,9 @@ def res_block(func, bottom, filters, kernel_size, strides=1, dilation_rate=1, na
                             apply_relu=False)
         if projection:
             short_cut = tf.layers.conv2d(short_cut, filters, 1, strides, padding='same',
-                                         kernel_initializer=tfc.layers.xavier_initializer(),
-                                         kernel_regularizer=tfc.layers.l2_regularizer(reg),
-                                         bias_regularizer=tfc.layers.l2_regularizer(reg),
+                                         # kernel_initializer=tfc.layers.xavier_initializer(),
+                                         # kernel_regularizer=tfc.layers.l2_regularizer(reg),
+                                         # bias_regularizer=tfc.layers.l2_regularizer(reg),
                                          name='projection', reuse=reuse)
         bottom = tf.add(bottom, short_cut, 'add')
         bottom = tf.nn.relu(bottom, name='relu')

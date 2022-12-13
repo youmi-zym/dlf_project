@@ -1,8 +1,7 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
-import tensorflow.contrib as tfc
-import tensorflow.contrib.keras as keras
+import tensorflow.keras as keras
 from tf_utils import hourglass, soft_arg_min, conv_block, res_block, SPP_branch
 
 class Model:
