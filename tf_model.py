@@ -18,10 +18,10 @@ class Model:
         self.build_model()
 
     def build_model(self):
-        self.left = tf.placeholder(tf.float32, shape=[self.batch_size, self.height, self.weight, 3])
-        self.right = tf.placeholder(tf.float32, shape=[self.batch_size, self.height, self.weight, 3])
-        self.label = tf.placeholder(tf.float32, shape=[self.batch_size, self.height, self.weight])
-        self.is_training = tf.placeholder(tf.bool, name='is_training')
+        self.left = tf.compat.v1.placeholder(tf.float32, shape=[self.batch_size, self.height, self.weight, 3])
+        self.right = tf.compat.v1.placeholder(tf.float32, shape=[self.batch_size, self.height, self.weight, 3])
+        self.label = tf.compat.v1.placeholder(tf.float32, shape=[self.batch_size, self.height, self.weight])
+        self.is_training = tf.compat.v1.placeholder(tf.bool, name='is_training')
 
         self.image_size_tf = tf.shape(self.left)[1:3]
 
@@ -47,70 +47,70 @@ class Model:
 
         self.loss = self._smooth_l1_loss(disps_mask, self.label)
 
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
+        optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=self.lr)
 
         self.train_op = optimizer.minimize(self.loss)
         try:
-          self.sess.run(tf.global_variables_initializer())
+          self.sess.run(tf.compat.v1.global_variables_initializer())
         except:
-          self.sess.run(tf.initialize_all_variables())
+          self.sess.run(tf.compat.v1.initialize_all_variables())
 
     def _smooth_l1_loss(self, disps_pred, disps_targets, sigma=1.0):
         sigma_2 = sigma ** 2
-        mask = tf.to_float(disps_targets > 0) * tf.to_float(disps_targets < self.max_disp)
+        mask = tf.compat.v1.to_float(disps_targets > 0) * tf.compat.v1.to_float(disps_targets < self.max_disp)
         box_diff = disps_pred - disps_targets
         in_box_diff = box_diff
         abs_in_box_diff = tf.abs(in_box_diff)
-        smoothL1_sign = tf.stop_gradient(tf.to_float(tf.less(abs_in_box_diff, 1. / sigma_2)))
+        smoothL1_sign = tf.stop_gradient(tf.compat.v1.to_float(tf.less(abs_in_box_diff, 1. / sigma_2)))
         total_loss = tf.pow(in_box_diff, 2) * (sigma_2 / 2.) * smoothL1_sign \
                       + (abs_in_box_diff - (0.5 / sigma_2)) * (1. - smoothL1_sign)
-        total_loss = total_loss * tf.to_float(mask)
+        total_loss = total_loss * tf.compat.v1.to_float(mask)
         loss = tf.reduce_mean(total_loss)
 
         return loss
 
     def CNN(self, bottom, reuse=False):
-        with tf.variable_scope('CNN'):
-            with tf.variable_scope('conv0'):
-                bottom = conv_block(tf.layers.conv2d, bottom, 32, 3, strides=2, name='conv0_1', reuse=reuse, reg=self.reg)
+        with tf.compat.v1.variable_scope('CNN'):
+            with tf.compat.v1.variable_scope('conv0'):
+                bottom = conv_block(tf.compat.v1.layers.conv2d, bottom, 32, 3, strides=2, name='conv0_1', reuse=reuse, reg=self.reg)
                 for i in range(1, 3):
-                    bottom = conv_block(tf.layers.conv2d, bottom, 32, 3, name='conv0_%d' % (i+1), reuse=reuse, reg=self.reg)
-            with tf.variable_scope('conv1'):
+                    bottom = conv_block(tf.compat.v1.layers.conv2d, bottom, 32, 3, name='conv0_%d' % (i+1), reuse=reuse, reg=self.reg)
+            with tf.compat.v1.variable_scope('conv1'):
                 for i in range(3):
-                    bottom = res_block(tf.layers.conv2d, bottom, 32, 3, name='conv1_%d' % (i+1), reuse=reuse, reg=self.reg)
-            with tf.variable_scope('conv2'):
-                bottom = res_block(tf.layers.conv2d, bottom, 64, 3, strides=2, name='conv2_1', reuse=reuse, reg=self.reg,
+                    bottom = res_block(tf.compat.v1.layers.conv2d, bottom, 32, 3, name='conv1_%d' % (i+1), reuse=reuse, reg=self.reg)
+            with tf.compat.v1.variable_scope('conv2'):
+                bottom = res_block(tf.compat.v1.layers.conv2d, bottom, 64, 3, strides=2, name='conv2_1', reuse=reuse, reg=self.reg,
                                    projection=True)
                 for i in range(1, 8):
-                    bottom = res_block(tf.layers.conv2d, bottom, 64, 3, name='conv2_%d' % (i+1), reuse=reuse, reg=self.reg)
-            with tf.variable_scope('conv3'):
-                bottom = res_block(tf.layers.conv2d, bottom, 128, 3, dilation_rate=2, name='conv3_1', reuse=reuse,
+                    bottom = res_block(tf.compat.v1.layers.conv2d, bottom, 64, 3, name='conv2_%d' % (i+1), reuse=reuse, reg=self.reg)
+            with tf.compat.v1.variable_scope('conv3'):
+                bottom = res_block(tf.compat.v1.layers.conv2d, bottom, 128, 3, dilation_rate=2, name='conv3_1', reuse=reuse,
                                    reg=self.reg, projection=True)
                 for i in range(1, 3):
-                    bottom = res_block(tf.layers.conv2d, bottom, 128, 3, dilation_rate=2, name='conv3_%d' % (i+1), reuse=reuse,
+                    bottom = res_block(tf.compat.v1.layers.conv2d, bottom, 128, 3, dilation_rate=2, name='conv3_%d' % (i+1), reuse=reuse,
                                        reg=self.reg)
-            with tf.variable_scope('conv4'):
+            with tf.compat.v1.variable_scope('conv4'):
                 for i in range(3):
-                    bottom = res_block(tf.layers.conv2d, bottom, 128, 3, dilation_rate=4, name='conv4_%d' % (i+1), reuse=reuse,
+                    bottom = res_block(tf.compat.v1.layers.conv2d, bottom, 128, 3, dilation_rate=4, name='conv4_%d' % (i+1), reuse=reuse,
                                        reg=self.reg)
         return bottom
 
     def SPP(self, bottom, reuse=False):
-        with tf.variable_scope('SPP'):
+        with tf.compat.v1.variable_scope('SPP'):
             branches = []
             for i, p in enumerate([64, 32, 16, 8]):
-                branches.append(SPP_branch(tf.layers.conv2d, bottom, p, 32, 3, name='branch_%d' % (i+1), reuse=reuse,
+                branches.append(SPP_branch(tf.compat.v1.layers.conv2d, bottom, p, 32, 3, name='branch_%d' % (i+1), reuse=reuse,
                                            reg=self.reg))
-            conv2_16 = tf.get_default_graph().get_tensor_by_name('CNN/conv2/conv2_8/add:0')
-            conv4_3 = tf.get_default_graph().get_tensor_by_name('CNN/conv4/conv4_3/add:0')
+            conv2_16 = tf.compat.v1.get_default_graph().get_tensor_by_name('CNN/conv2/conv2_8/add:0')
+            conv4_3 = tf.compat.v1.get_default_graph().get_tensor_by_name('CNN/conv4/conv4_3/add:0')
             concat = tf.concat([conv2_16, conv4_3] + branches, axis=-1, name='concat')
-            with tf.variable_scope('fusion'):
-                bottom = conv_block(tf.layers.conv2d, concat, 128, 3, name='conv1', reuse=reuse, reg=self.reg)
-                fusion = conv_block(tf.layers.conv2d, bottom, 32, 1, name='conv2', reuse=reuse, reg=self.reg)
+            with tf.compat.v1.variable_scope('fusion'):
+                bottom = conv_block(tf.compat.v1.layers.conv2d, concat, 128, 3, name='conv1', reuse=reuse, reg=self.reg)
+                fusion = conv_block(tf.compat.v1.layers.conv2d, bottom, 32, 1, name='conv2', reuse=reuse, reg=self.reg)
         return fusion
 
     def cost_vol(self, left, right, max_disp=192):
-        with tf.variable_scope('cost_vol'):
+        with tf.compat.v1.variable_scope('cost_vol'):
             shape = tf.shape(right)
             right_tensor = keras.backend.spatial_2d_padding(right, padding=((0, 0), (max_disp // 4, 0)))
             disparity_costs = []
@@ -124,45 +124,45 @@ class Model:
         return cost_vol
 
     def CNN3D(self, bottom):
-        with tf.variable_scope('CNN3D'):
+        with tf.compat.v1.variable_scope('CNN3D'):
             for i in range(6):
-                bottom = conv_block(tf.layers.conv3d, bottom, 32, 3, name='3Dconv0_%d' % (i+1), reg=self.reg)
+                bottom = conv_block(tf.compat.v1.layers.conv3d, bottom, 32, 3, name='3Dconv0_%d' % (i+1), reg=self.reg)
 
-            out = conv_block(tf.layers.conv3d, bottom, 1, 3, name='3Dconv5', reg=self.reg)
+            out = conv_block(tf.compat.v1.layers.conv3d, bottom, 1, 3, name='3Dconv5', reg=self.reg)
         return out
 
     def resnet_3d(self, bottom):
-        with tf.variable_scope('RES3D'):
+        with tf.compat.v1.variable_scope('RES3D'):
             for i in range(2):
-                bottom = conv_block(tf.layers.conv3d, bottom, 32, 3, name='3Dconv0_%d' % (i+1), reg=self.reg)
+                bottom = conv_block(tf.compat.v1.layers.conv3d, bottom, 32, 3, name='3Dconv0_%d' % (i+1), reg=self.reg)
 
-            _3Dconv1 = res_block(tf.layers.conv3d, bottom, 32, 3, name='3Dconv1', reg=self.reg)
-            _3Dconv1 = res_block(tf.layers.conv3d, _3Dconv1, 32, 3, name='3Dconv2', reg=self.reg)
-            _3Dconv1 = res_block(tf.layers.conv3d, _3Dconv1, 32, 3, name='3Dconv3', reg=self.reg)
-            _3Dconv1 = res_block(tf.layers.conv3d, _3Dconv1, 32, 3, name='3Dconv4', reg=self.reg)
-            out = conv_block(tf.layers.conv3d, _3Dconv1, 1, 3, name='3Dconv5', reg=self.reg)
+            _3Dconv1 = res_block(tf.compat.v1.layers.conv3d, bottom, 32, 3, name='3Dconv1', reg=self.reg)
+            _3Dconv1 = res_block(tf.compat.v1.layers.conv3d, _3Dconv1, 32, 3, name='3Dconv2', reg=self.reg)
+            _3Dconv1 = res_block(tf.compat.v1.layers.conv3d, _3Dconv1, 32, 3, name='3Dconv3', reg=self.reg)
+            _3Dconv1 = res_block(tf.compat.v1.layers.conv3d, _3Dconv1, 32, 3, name='3Dconv4', reg=self.reg)
+            out = conv_block(tf.compat.v1.layers.conv3d, _3Dconv1, 1, 3, name='3Dconv5', reg=self.reg)
         return out
 
     def densenet_3d(self, bottom):
-        with tf.variable_scope('DENSE3D'):
+        with tf.compat.v1.variable_scope('DENSE3D'):
             for i in range(2):
-                bottom = conv_block(tf.layers.conv3d, bottom, 32, 3, name='3Dconv0_%d' % (i+1), reg=self.reg)
+                bottom = conv_block(tf.compat.v1.layers.conv3d, bottom, 32, 3, name='3Dconv0_%d' % (i+1), reg=self.reg)
 
             out = [bottom]
             for j in range(5):
-                bottom = conv_block(tf.layers.conv3d, bottom, 32, 3, name='3Dconv1_%d' % (j+1), reg=self.reg)
+                bottom = conv_block(tf.compat.v1.layers.conv3d, bottom, 32, 3, name='3Dconv1_%d' % (j+1), reg=self.reg)
                 out.append(bottom)
                 bottom = tf.concat(out, axis=-1)
 
-            out = conv_block(tf.layers.conv3d, bottom, 1, 3, name='3Dconv5', reg=self.reg)
+            out = conv_block(tf.compat.v1.layers.conv3d, bottom, 1, 3, name='3Dconv5', reg=self.reg)
         return out
 
     def output(self, output):
         squeeze = tf.squeeze(output, [4])
         transpose = tf.transpose(squeeze, [0, 2, 3, 1])
 
-        upsample = tf.transpose(tf.image.resize_images(transpose, self.image_size_tf), [0, 3, 1, 2])
-        upsample = tf.image.resize_images(upsample, tf.constant([self.max_disp, self.height], dtype=tf.int32))
+        upsample = tf.transpose(tf.compat.v1.image.resize_images(transpose, self.image_size_tf), [0, 3, 1, 2])
+        upsample = tf.compat.v1.image.resize_images(upsample, tf.constant([self.max_disp, self.height], dtype=tf.int32))
         disps = soft_arg_min(upsample, 'soft_arg_min')
         return disps
 

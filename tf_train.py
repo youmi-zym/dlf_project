@@ -19,10 +19,10 @@ def main():
 
     if not os.path.exists('./results/'):
         os.mkdir('./results/')
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         Net = Model(sess, height=256, weight=512, batch_size=bat_size,
                     max_disp=maxdisp, lr=0.001, cnn_3d_type='resnet_3d')
-        saver = tf.train.Saver()
+        saver = tf.compat.v1.train.Saver()
         for epoch in range(1, epochs + 1):
             total_train_loss = 0
 
