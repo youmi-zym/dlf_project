@@ -15,11 +15,11 @@ parser.add_argument('--maxdisp', type=int ,default=192,
 parser.add_argument('--batch', type=int ,default=1,
                     help='batch_size')	
 parser.add_argument('--datapath', default='./data/', help='datapath')
-parser.add_argument('--loadmodel', default='./ckpt/PSMNet.ckpt-50',
+parser.add_argument('--loadmodel', default='./ckpt/final.ckpt',
                     help='load model')
-parser.add_argument('--leftimg', default='left/0006.png',
+parser.add_argument('--leftimg', default='left/000018_10.png',
                     help='left image')
-parser.add_argument('--rightimg', default='right/0006.png',
+parser.add_argument('--rightimg', default='right/000018_10.png',
                     help='right image')
 
 args = parser.parse_args()
@@ -41,13 +41,13 @@ def mean_std(inputs):
 
 def main():
 
-    height = 544
-    weight = 960
+    height = 368
+    weight = 1224
     left_img = args.datapath+args.leftimg
     right_img = args.datapath+args.leftimg
 
 
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
 
         img_L = cv2.cvtColor(cv2.imread(left_img), cv2.COLOR_BGR2RGB)
         img_L = cv2.resize(img_L, (weight, height))
@@ -59,14 +59,16 @@ def main():
         img_R = mean_std(img_R)
         img_R = np.expand_dims(img_R, axis=0)
 		
-        net = Model(sess, height=height, weight=weight, batch_size=args.batch, max_disp=args.maxdisp)
-        saver = tf.train.Saver()
+        net = Model(sess, height=height, weight=weight, batch_size=args.batch, 
+                    max_disp=args.maxdisp, lr=0.001, cnn_3d_type='resnet_3d')
+        saver = tf.compat.v1.train.Saver()
         saver.restore(sess, args.loadmodel)
 		
         pred = net.predict(img_L, img_R)
-        pred = np.squeeze(pred,axis=0)
-
-        plt.imsave('pred_plt.png', pred)
+        pred = np.squeeze(pred, axis=0)
+        item = (pred * 255 / pred.max()).astype(np.uint8)
+        pred_rainbow = cv2.applyColorMap(item, cv2.COLORMAP_RAINBOW)
+        cv2.imwrite('tf_prediction.png', pred_rainbow)
 
 
 if __name__ == '__main__':

@@ -173,10 +173,10 @@ class Model:
 
     def test(self, left, right, label):
         pred, loss = self.sess.run([self.disps, self.loss],
-                                   feed_dict={self.left: left, self.right: right, self.label: label, self.is_training:False})
+                                   feed_dict={self.left: left, self.right: right, self.label: label, self.is_training:True})
         return pred, loss
 
     def predict(self, left, right):
         pred = self.sess.run([self.disps],
-                             feed_dict={self.left: left, self.right: right, self.is_training:False})
-        return pred
+                             feed_dict={self.left: left, self.right: right, self.is_training:True})
+        return pred[-1]
