@@ -58,15 +58,17 @@ class Model:
 
     def _smooth_l1_loss(self, disps_pred, disps_targets, sigma=1.0):
         sigma_2 = sigma ** 2
+        mask = tf.to_float(disps_targets > 0) * tf.to_float(disps_targets < self.max_disp)
         box_diff = disps_pred - disps_targets
         in_box_diff = box_diff
         abs_in_box_diff = tf.abs(in_box_diff)
         smoothL1_sign = tf.stop_gradient(tf.to_float(tf.less(abs_in_box_diff, 1. / sigma_2)))
-        in_loss_box = tf.pow(in_box_diff, 2) * (sigma_2 / 2.) * smoothL1_sign \
+        total_loss = tf.pow(in_box_diff, 2) * (sigma_2 / 2.) * smoothL1_sign \
                       + (abs_in_box_diff - (0.5 / sigma_2)) * (1. - smoothL1_sign)
-        out_loss_box = in_loss_box
-        loss_box = tf.reduce_mean(tf.reduce_sum(out_loss_box))
-        return loss_box
+        total_loss = total_loss * tf.to_float(mask)
+        loss = tf.reduce_mean(total_loss)
+
+        return loss
 
     def CNN(self, bottom, reuse=False):
         with tf.variable_scope('CNN'):
