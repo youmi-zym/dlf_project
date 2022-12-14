@@ -5,7 +5,7 @@ import os
 
 
 class DataLoaderKITTI(object):
-    def __init__(self, left_path, right_path, gt_path, batch_size, patch_size=(256, 512), max_disp=129):
+    def __init__(self, left_path, right_path, gt_path, batch_size, patch_size=(256, 512), max_disp=192):
         self.left_path = left_path
         self.right_path = right_path
         self.gt_path = gt_path
